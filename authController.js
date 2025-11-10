@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import 'dotenv/config'; 
 
-// LECTURA DE LAS VARIABLES DE ENTORNO
 const JWT_SECRET = process.env.JWT_SECRET; 
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '1d'; 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID; 
@@ -12,12 +11,11 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 if (!JWT_SECRET || !GOOGLE_CLIENT_ID) {
-    // ESTE console.error SOLO APARECERÁ EN LA TERMINAL DE VERCEL/RAILWAY AL DESPLIEGUE
     console.error('❌ ERROR: JWT_SECRET o GOOGLE_CLIENT_ID no están definidos.');
-    // No usamos process.exit(1) en Serverless, ya que corta la función.
 }
 
 const generateToken = (id) => {
+    if (!JWT_SECRET) throw new Error("JWT_SECRET no configurado.");
     return jwt.sign({ id }, JWT_SECRET, {
         expiresIn: JWT_EXPIRATION,
     });
@@ -33,7 +31,7 @@ export const registerUser = async (req, res) => {
     }
 
     try {
-        const pool = getPool(); // Asume que connectDB ya se llamó
+        const pool = getPool(); 
         const hashedPassword = await bcrypt.hash(password, 10);
         
         const checkQuery = `
@@ -63,9 +61,8 @@ export const registerUser = async (req, res) => {
         });
 
     } catch (error) {
-        // Este catch atrapa errores de DB (como el 500 inicial)
         console.error("❌ Error en el registro:", error);
-        res.status(500).json({ success: false, message: "Error interno del servidor en registro." });
+        res.status(500).json({ success: false, message: "Error interno del servidor o de la base de datos." });
     }
 };
 
@@ -105,12 +102,12 @@ export const loginUser = async (req, res) => {
         }
     } catch (error) {
         console.error("❌ Error en el login:", error);
-        res.status(500).json({ success: false, message: "Error interno del servidor en login." });
+        res.status(500).json({ success: false, message: "Error interno del servidor o de la base de datos." });
     }
 };
 
 // ===============================================
-// 3. GOOGLE LOGIN (Corregido)
+// 3. GOOGLE LOGIN
 // ===============================================
 export const googleLogin = async (req, res) => {
     const { id_token } = req.body;

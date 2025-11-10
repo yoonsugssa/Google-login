@@ -2,7 +2,6 @@ import pkg from 'pg';
 const { Pool } = pkg; 
 import 'dotenv/config';
 
-// Usar la Cadena de Conexión de Vercel/Railway
 const connectionString = process.env.DATABASE_URL;
 
 let pool;
@@ -15,7 +14,6 @@ export const connectDB = async () => {
     try {
         if (!pool) {
             if (!connectionString) {
-                // Lanza un error si la variable esencial no está configurada.
                 throw new Error("❌ La variable DATABASE_URL no está definida.");
             }
             
@@ -25,13 +23,13 @@ export const connectDB = async () => {
                 connectionString: connectionString,
                 max: 10,
                 idleTimeoutMillis: 30000,
-                // Opcional: Configuración SSL requerida para Railway/entornos cloud
+                // Configuración SSL es a menudo necesaria en entornos cloud como Railway
                 ssl: {
                     rejectUnauthorized: false 
                 }
             }); 
             
-            // Intenta conectar para verificar que la cadena sea válida
+            // Prueba de conexión
             await pool.query('SELECT NOW()'); 
             console.log('✅ Conexión exitosa a PostgreSQL.');
         }
@@ -48,7 +46,7 @@ export const connectDB = async () => {
  */
 export const getPool = () => {
     if (!pool) {
-        throw new Error('El pool de la DB no está inicializado. Ejecuta connectDB() primero.');
+        throw new Error('El pool de la DB no está inicializado.');
     }
     return pool;
 };

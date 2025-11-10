@@ -5,69 +5,68 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-import { connectDB } from './db.js'; // Función para inicializar el pool
+import { connectDB } from './db.js'; 
 import authRouter from './authRoutes.js'; 
-import { getPool } from './db.js'; // Importar getPool para la ruta de salud
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Railway establece esta variable automáticamente, pero 3000 es el fallback.
+const PORT = process.env.PORT || 3000; 
 const jwtSecret = process.env.JWT_SECRET;
 
-// 🛑 En Vercel, no podemos detener el proceso. La validación debe ser pasiva.
 if (!jwtSecret) {
-    console.error('❌ ERROR: JWT_SECRET no está definido en el entorno. Esto causará fallos.');
+    console.error('❌ ERROR: JWT_SECRET no está definido. La autenticación JWT fallará.');
 }
 
-const dbConnectionPromise = connectDB().catch(error => {
-    console.error('❌ Fallo fatal al conectar la DB al inicio:', error);
-    // Nota: Aunque falle, la aplicación debe seguir, pero las rutas de DB fallarán.
-});
-
-app.use(cors()); 
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true }));
-
-// Definir el path de los archivos estáticos
-const publicPath = path.join(__dirname, "public");
-app.use(express.static(publicPath));
-
-// ----------------------------------------------------
-// 3. RUTAS API
-// ----------------------------------------------------
-app.use('/api/auth', authRouter); 
-
-// Ruta de Salud/Status para Vercel (verifica la DB)
-app.get('/api/status', async (req, res) => {
+const startServer = async () => {
+    let dbConnected = false;
+    
+    // 1. Intentar conectar a la Base de Datos
     try {
-        // Espera a que la promesa de conexión se resuelva
-        await dbConnectionPromise; 
-        const pool = getPool();
-        await pool.query('SELECT 1'); // Prueba rápida de conexión
-        res.status(200).json({ status: 'OK', message: 'API y DB están conectadas.' });
+        await connectDB();
+        dbConnected = true;
     } catch (error) {
-        console.error('Error de salud de la DB:', error);
-        res.status(503).json({ status: 'Error', message: 'DB sin conexión o inicialización fallida.' });
+        // Si falla, solo registra el error. NO se detiene el proceso de Express.
+        console.error('❌ Fallo al conectar la DB al inicio. Las rutas de API fallarán:', error.message);
     }
-});
+    
+    // --- 2. Configuración de Express (Siempre se ejecuta) ---
+    app.use(cors()); 
+    app.use(express.json()); 
+    app.use(express.urlencoded({ extended: true }));
+
+    // Define y sirve el frontend (HTML, CSS, JS) desde la carpeta 'public'
+    const publicPath = path.join(__dirname, "public");
+    app.use(express.static(publicPath));
+
+    // Rutas de la API
+    app.use('/api/auth', authRouter); 
+
+    // Rutas de Archivos Estáticos (Frontend)
+    app.get("/", (req, res) => {
+        res.sendFile(path.join(publicPath, "login.html"));
+    });
+    
+    app.get("/login", (req, res) => {
+        res.sendFile(path.join(publicPath, "login.html"));
+    });
+
+    app.get("/register.html", (req, res) => {
+        res.sendFile(path.join(publicPath, "register.html"));
+    });
+
+    app.get("/index.html", (req, res) => {
+        res.sendFile(path.join(publicPath, "index.html")); 
+    });
 
 
-app.get("/", (req, res) => {
-    res.sendFile(path.join(publicPath, "login.html"));
-});
+    // --- 3. Arrancar el servidor (CRUCIAL para Railway) ---
+    app.listen(PORT, () => {
+        const status = dbConnected ? '✅ DB Conectada' : '❌ DB Desconectada';
+        console.log(`✨ Servidor Express escuchando en el puerto ${PORT}. Estado DB: ${status}`);
+    });
+};
 
-app.get("/login", (req, res) => {
-    res.sendFile(path.join(publicPath, "login.html"));
-});
-
-app.get("/register.html", (req, res) => {
-    res.sendFile(path.join(publicPath, "register.html"));
-});
-
-app.get("/index.html", (req, res) => {
-    res.sendFile(path.join(publicPath, "index.html")); 
-});
-
-export default app;
+startServer();
