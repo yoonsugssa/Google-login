@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const eyeIconOpen = document.getElementById('eye-icon-open');
     const eyeIconClosed = document.getElementById('eye-icon-closed');
 
-    const BASE_URL = 'http://localhost:3000/api/auth';
+    // 💡 CORRECCIÓN: Usamos ruta base relativa para mayor portabilidad (servidor/Render)
+    const BASE_URL = '/api/auth';
     const googleLoginUrl = `${BASE_URL}/google-login`;
     const registerUrl = `${BASE_URL}/register`;
 
@@ -27,14 +28,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageBox.style.backgroundColor = '#F44336'; 
                 break;
             case 'loading':
+                // Aseguramos que se muestre el spinner si está definido en el CSS
+                messageText.innerHTML = `<span class="spinner"></span> ${message}`;
                 messageBox.style.backgroundColor = '#2196F3'; 
                 break;
+            default:
+                 messageBox.style.backgroundColor = '#79648b'; // Color por defecto
         }
 
-        messageBox.style.display = 'block';
+        // Mostrar el cuadro de mensaje
+        messageBox.style.opacity = '1';
+        messageBox.style.visibility = 'visible';
 
         if (status !== 'loading') {
-            setTimeout(() => { messageBox.style.display = 'none'; }, 3000);
+            // Ocultar con transición después de 3 segundos
+            setTimeout(() => { 
+                messageBox.style.opacity = '0';
+                messageBox.style.visibility = 'hidden'; 
+            }, 3000);
         }
     }
 
@@ -79,8 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok && data.success) {
                     localStorage.setItem('user_token', data.user_token);
                     showMessageBox('success', data.message || '¡Registro exitoso! Redirigiendo...');
+                    // Redirección después de 1 segundo
                     setTimeout(() => (window.location.href = '/index.html'), 1000); 
                 } else {
+                    // Si falla, el mensaje se oculta después de 3 segundos
                     showMessageBox('error', data.message || 'Error en el registro.');
                 }
             } catch (error) {

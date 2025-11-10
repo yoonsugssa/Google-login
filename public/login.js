@@ -1,6 +1,5 @@
-// login.js
 document.addEventListener('DOMContentLoaded', () => {
-    const AUTH_BASE_URL = 'http://localhost:3000/api/auth';
+    const AUTH_BASE_URL = '/api/auth'; 
     
     const passwordInput = document.getElementById('password-input');
     const toggleButton = document.getElementById('password-toggle-btn');
@@ -16,9 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.textContent = text;
         messageBox.style.backgroundColor = color;
         messageBox.style.display = 'block';
+        messageBox.style.opacity = '1'; // Asegurar visibilidad
+        messageBox.style.visibility = 'visible';
 
         if (timeout > 0) {
-            setTimeout(() => { messageBox.style.display = 'none'; }, timeout);
+            setTimeout(() => { 
+                messageBox.style.opacity = '0';
+                messageBox.style.visibility = 'hidden'; 
+            }, timeout);
         }
     }
 
@@ -38,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = passwordInput.value.trim();
             if (!email || !password) { showMessage('Por favor completa todos los campos.', '#F44336'); return; }
 
-            showMessage('Iniciando sesión...', '#2196F3', 0);
+            showMessage('Iniciando sesión...', '#2196F3', 0); 
 
             try {
                 const response = await fetch(`${AUTH_BASE_URL}/login`, {
@@ -50,11 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json().catch(() => ({}));
 
                 if (response.ok) {
-                    showMessage(data.message || 'Redirigiendo...', '#4CAF50');
+                    // 2. CORRECCIÓN: Usamos timeout=0 para que el mensaje no desaparezca antes de redirigir.
+                    showMessage(data.message || 'Redirigiendo...', '#4CAF50', 0); 
                     if (data.user_token) localStorage.setItem('user_token', data.user_token);
-                    // REDIRECCIÓN CORREGIDA
+                    
+                    // La redirección ocurre después de 1 segundo.
                     setTimeout(() => (window.location.href = '/index.html'), 1000); 
                 } else {
+                    // Error: Muestra el mensaje por 3 segundos (timeout por defecto)
                     showMessage(`Error: ${data.message || 'Error de credenciales.'}`, '#F44336');
                 }
             } catch (error) {
@@ -79,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await apiResponse.json().catch(() => ({}));
 
             if (apiResponse.ok && data.success) {
-                showMessage(`Google Login exitoso. ${data.message || 'Redirigiendo...'}`, '#4CAF50');
+                showMessage(`Google Login exitoso. ${data.message || 'Redirigiendo...'}`, '#4CAF50', 0); // timeout=0
                 if (data.user_token) localStorage.setItem('user_token', data.user_token);
                 setTimeout(() => (window.location.href = '/index.html'), 1000);
             } else {

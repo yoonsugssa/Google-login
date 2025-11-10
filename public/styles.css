@@ -8,12 +8,9 @@ html {
 /* -------------------------------------------------------- */
 
 body {
-    /* CAMBIO CLAVE 1: Usar height: 100% y ocultar overflow */
     height: 100%; 
-    min-height: 100%; /* Mantenemos por si acaso */
-    overflow: hidden; /* Esto elimina la barra de desplazamiento no deseada */
-    
-    /* El resto de estilos se mantienen */
+    min-height: 100%; 
+    overflow: hidden; 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -126,7 +123,6 @@ body {
     vertical-align: middle;
     align-items: center;
     border-radius: 0.5rem;
-    border: 1px solid var(--primary);
     gap: 0.75rem;
     color: #fff;
     background-color: var(--primary);
