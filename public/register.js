@@ -1,53 +1,86 @@
+const AUTH_BASE_URL = '/api/auth'; 
+const googleLoginUrl = `${AUTH_BASE_URL}/google-login`;
+const registerUrl = `${AUTH_BASE_URL}/register`;
+
+// Variables que se inicializan en DOMContentLoaded, pero deben ser globales para las funciones de error
+const userInput = document.getElementById('user-input');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+
+const errorUser = document.getElementById('error-user');
+const errorEmail = document.getElementById('error-email');
+const errorPassword = document.getElementById('error-password');
+
+
+// =========================================================
+// 1. FUNCIONES DE UTILIDAD (Fuera de DOMContentLoaded)
+// =========================================================
+
+// Función auxiliar para limpiar todos los errores
+function clearAllErrors() {
+    if (errorUser) { errorUser.textContent = ''; errorUser.style.display = 'none'; }
+    if (errorEmail) { errorEmail.textContent = ''; errorEmail.style.display = 'none'; }
+    if (errorPassword) { errorPassword.textContent = ''; errorPassword.style.display = 'none'; }
+    
+    userInput?.classList.remove('input-error');
+    emailInput?.classList.remove('input-error');
+    passwordInput?.classList.remove('input-error');
+}
+
+// FUNCIÓN PARA MOSTRAR ERRORES DE CAMPO
+function showFieldError(inputElement, errorElement, message) {
+    clearAllErrors(); 
+    
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        inputElement?.classList.add('input-error'); 
+    }
+    inputElement?.focus(); 
+}
+
+function showGeneralError(message) {
+    console.error("ERROR GENERAL:", message);
+}
+
+
+// =========================================================
+// 2. FUNCIÓN GLOBAL PARA GOOGLE SIGN-IN (ACCESIBLE PARA GSI)
+// =========================================================
+window.handleCredentialResponse = async (response) => {
+    clearAllErrors();
+    const id_token = response?.credential;
+    if (!id_token) { showGeneralError('Error: token de Google vacío.'); return; }
+    
+    try {
+        const res = await fetch(googleLoginUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_token })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.success) {
+            // ✅ ÉXITO: Redirección INMEDIATA
+            localStorage.setItem('user_token', data.user_token);
+            window.location.href = '/index.html';
+        } else {
+            showGeneralError(data.message || 'Error de autenticación con Google.');
+        }
+    } catch (error) {
+        showGeneralError('Error de conexión con el servidor.');
+    }
+}
+
+// =========================================================
+// 3. CÓDIGO QUE ESPERA LA CARGA DEL DOM (Event Listeners)
+// =========================================================
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('register-form');
-    const userInput = document.getElementById('user-input');
-    const emailInput = document.getElementById('email-input');
-    const passwordInput = document.getElementById('password-input');
-    
-    // Asignación de los nuevos elementos de error del HTML
-    const errorUser = document.getElementById('error-user');
-    const errorEmail = document.getElementById('error-email');
-    const errorPassword = document.getElementById('error-password');
-    
     const passwordToggleBtn = document.getElementById('password-toggle-btn');
     const eyeIconOpen = document.getElementById('eye-icon-open');
     const eyeIconClosed = document.getElementById('eye-icon-closed');
-
-    const BASE_URL = '/api/auth'; 
-    const googleLoginUrl = `${BASE_URL}/google-login`;
-    const registerUrl = `${BASE_URL}/register`;
-
-    // FUNCIÓN PARA MOSTRAR ERRORES DE CAMPO
-    function showFieldError(inputElement, errorElement, message) {
-        clearAllErrors(); 
-        
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            inputElement?.classList.add('input-error'); // Puedes usar una clase CSS para resaltar el input
-        }
-        inputElement?.focus(); 
-    }
-    
-    // Función auxiliar para limpiar todos los errores
-    function clearAllErrors() {
-        // Limpia los mensajes
-        if (errorUser) { errorUser.textContent = ''; errorUser.style.display = 'none'; }
-        if (errorEmail) { errorEmail.textContent = ''; errorEmail.style.display = 'none'; }
-        if (errorPassword) { errorPassword.textContent = ''; errorPassword.style.display = 'none'; }
-        
-        // Limpia las clases de error (si las implementaste)
-        userInput?.classList.remove('input-error');
-        emailInput?.classList.remove('input-error');
-        passwordInput?.classList.remove('input-error');
-    }
-
-    // Errores generales (para conexión o API) se manejan internamente aquí
-    function showGeneralError(message) {
-        // Opción: Muestra en la consola o en un lugar discreto si es necesario.
-        console.error("ERROR GENERAL:", message);
-        // Si no quieres mostrarlo en pantalla, simplemente no hagas nada aquí.
-    }
 
     if (passwordToggleBtn) {
         passwordToggleBtn.addEventListener('click', () => {
@@ -67,26 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = emailInput?.value.trim();
             const password = passwordInput?.value.trim();
 
-            // 1. Validaciones de cliente (las que el usuario puede cometer)
-            if (!usuario) {
-                showFieldError(userInput, errorUser, 'Por favor ingresa un nombre de usuario.');
-                return;
-            }
-            if (!email) {
-                showFieldError(emailInput, errorEmail, 'Por favor ingresa tu correo electrónico.');
-                return;
-            }
-            if (!password) {
-                showFieldError(passwordInput, errorPassword, 'Por favor ingresa una contraseña.');
-                return;
-            }
-            if (password.length < 6) {
-                showFieldError(passwordInput, errorPassword, 'La contraseña debe tener al menos 6 caracteres.');
-                return;
-            }
+            // 1. Validaciones de cliente
+            if (!usuario) { showFieldError(userInput, errorUser, 'Por favor ingresa un nombre de usuario.'); return; }
+            if (!email) { showFieldError(emailInput, errorEmail, 'Por favor ingresa tu correo electrónico.'); return; }
+            if (!password) { showFieldError(passwordInput, errorPassword, 'Por favor ingresa una contraseña.'); return; }
+            if (password.length < 6) { showFieldError(passwordInput, errorPassword, 'La contraseña debe tener al menos 6 caracteres.'); return; }
             
-            // Omitir mensaje de "Cargando"
-
             try {
                 const response = await fetch(registerUrl, {
                     method: 'POST',
@@ -97,14 +116,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json().catch(() => ({}));
 
                 if (response.ok && data.success) {
-                    // ✅ ÉXITO: Redirige inmediatamente a /index.html sin mensaje.
+                    // ✅ ÉXITO: Redirige inmediatamente
                     localStorage.setItem('user_token', data.user_token);
                     window.location.href = '/index.html'; 
                 } else {
-                    // 2. ERROR DEL SERVIDOR (ej: usuario/email ya existe)
+                    // 2. ERROR DEL SERVIDOR
                     const message = data.message || 'Error desconocido en el registro.';
                     
-                    // Intenta asignar el error al campo más probable
                     if (message.toLowerCase().includes('usuario')) {
                         showFieldError(userInput, errorUser, message);
                     } else if (message.toLowerCase().includes('correo') || message.toLowerCase().includes('email')) {
@@ -120,32 +138,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    async function handleCredentialResponse(response) {
-        clearAllErrors();
-        const id_token = response?.credential;
-        if (!id_token) { showGeneralError('Error: token de Google vacío.'); return; }
-        
-        // Omitir mensaje de "Cargando"
-
-        try {
-            const res = await fetch(googleLoginUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_token })
-            });
-
-            const data = await res.json().catch(() => ({}));
-
-            if (res.ok && data.success) {
-                localStorage.setItem('user_token', data.user_token);
-                window.location.href = '/index.html';
-            } else {
-                showGeneralError(data.message || 'Error de autenticación con Google.');
-            }
-        } catch (error) {
-            showGeneralError('Error de conexión con el servidor.');
-        }
-    }
-    window.handleCredentialResponse = handleCredentialResponse;
 });
