@@ -137,6 +137,7 @@ body {
 .submit-button:hover {
     background-color: var(--primary-dark);
     box-shadow: 0 8px 20px rgba(156, 59, 246, 0.3);
+    border: 1px solid var(--primary-dark);
 }
 
 
