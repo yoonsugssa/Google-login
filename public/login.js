@@ -7,9 +7,10 @@ const closedEye = document.getElementById('eye-icon-closed');
 const loginForm = document.getElementById('login-form');
 const emailInput = document.getElementById('email-input');
 
-// Elementos de error para mostrar debajo del campo
+// Elementos de error (deben estar en tu HTML: <p class="error-text" id="error-email">)
 const errorEmail = document.getElementById('error-email');
 const errorPassword = document.getElementById('error-password');
+
 
 // Función para limpiar todos los errores
 function clearAllErrors() {
@@ -32,10 +33,15 @@ function showFieldError(inputElement, errorElement, message) {
 }
 
 function showGeneralError(message) {
-    // Por defecto, muestra el error en el campo de email/usuario
+    // Para login, un error general se muestra en el campo de email/usuario
     showFieldError(emailInput, errorEmail, message);
 }
 
+
+// =========================================================
+// 🚨 FUNCIÓN GLOBAL PARA GOOGLE SIGN-IN (GSI) 🚨
+// Debe estar global para que el script de Google la encuentre.
+// =========================================================
 window.handleCredentialResponse = async (response) => {
     clearAllErrors();
     const id_token = response?.credential;
@@ -54,7 +60,7 @@ window.handleCredentialResponse = async (response) => {
         const data = await apiResponse.json().catch(() => ({}));
 
         if (apiResponse.ok && data.success) {
-            // ✅ ÉXITO: Redirección INMEDIATA sin mensajes
+            // ✅ ÉXITO: Redirección INMEDIATA
             if (data.user_token) localStorage.setItem('user_token', data.user_token);
             window.location.href = '/index.html';
         } else {
@@ -67,7 +73,7 @@ window.handleCredentialResponse = async (response) => {
 };
 
 // =========================================================
-// CÓDIGO QUE ESPERA LA CARGA DEL DOM
+// CÓDIGO QUE ESPERA LA CARGA DEL DOM (Login Manual)
 // =========================================================
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -92,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!email) { showFieldError(emailInput, errorEmail, 'El usuario o correo es obligatorio.'); return; }
             if (!password) { showFieldError(passwordInput, errorPassword, 'La contraseña es obligatoria.'); return; }
 
+            // Se elimina showMessage('Iniciando sesión...', '#2196F3', 0);
+
             try {
                 const response = await fetch(`${AUTH_BASE_URL}/login`, {
                     method: 'POST',
@@ -102,13 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json().catch(() => ({}));
 
                 if (response.ok) {
-                    // ✅ ÉXITO: Redirección INMEDIATA sin mensajes
+                    // ✅ ÉXITO: Permite entrar y redirige inmediatamente
                     if (data.user_token) localStorage.setItem('user_token', data.user_token);
                     window.location.href = '/index.html'; 
                 } else {
                     // ERROR DEL SERVIDOR
                     const message = data.message || 'Credenciales incorrectas.';
                     
+                    // Intenta asignar el error al campo más probable
                     if (message.toLowerCase().includes('password') || message.toLowerCase().includes('contraseña')) {
                         showFieldError(passwordInput, errorPassword, message);
                     } else {
