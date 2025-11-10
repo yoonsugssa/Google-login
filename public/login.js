@@ -81,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (apiResponse.ok && data.success) {
                 showMessage(`Google Login exitoso. ${data.message || 'Redirigiendo...'}`, '#4CAF50');
                 if (data.user_token) localStorage.setItem('user_token', data.user_token);
-                // REDIRECCIÓN CORREGIDA
                 setTimeout(() => (window.location.href = '/index.html'), 1000);
             } else {
                 showMessage(`Error de Google Login: ${data.message || 'Error del servidor.'}`, '#F44336');
