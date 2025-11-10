@@ -36,7 +36,7 @@ export const registerUser = async (req, res) => {
         
         const checkQuery = `
             SELECT id_usuario 
-            FROM "USUARIO"  
+            FROM "USUARIO"  
             WHERE usuario = $1 OR correo_electronico = $2
         `;
         const checkResult = await pool.query(checkQuery, [usuario, email]);
@@ -78,16 +78,28 @@ export const loginUser = async (req, res) => {
     try {
         const pool = getPool();
 
+        // Se selecciona la contraseña (contrasena) y google_id
         const query = `
-            SELECT id_usuario, usuario, contrasena 
+            SELECT id_usuario, usuario, contrasena, google_id
             FROM "USUARIO" 
             WHERE correo_electronico = $1 OR usuario = $1
         `;
 
         const result = await pool.query(query, [usuarioOrEmail]);
         const user = result.rows[0];
+        
+        // 🚨 Manejo de usuario encontrado
+        if (!user) {
+            return res.status(401).json({ success: false, message: "Credenciales inválidas." });
+        }
 
-        const isPasswordMatch = user && user.contrasena 
+        // 🚨 Si el usuario existe pero no tiene contraseña (solo Google)
+        if (!user.contrasena && user.google_id) {
+             return res.status(401).json({ success: false, message: "Cuenta registrada solo con Google. Utiliza el inicio de sesión de Google." });
+        }
+        
+        // Compara el hash (solo si existe)
+        const isPasswordMatch = user.contrasena 
             ? (await bcrypt.compare(password, user.contrasena)) 
             : false;
             
@@ -107,7 +119,7 @@ export const loginUser = async (req, res) => {
 };
 
 // ===============================================
-// 3. GOOGLE LOGIN
+// 3. GOOGLE LOGIN CORREGIDO
 // ===============================================
 export const googleLogin = async (req, res) => {
     const { id_token } = req.body;
@@ -124,12 +136,12 @@ export const googleLogin = async (req, res) => {
         });
         const payload = ticket.getPayload();
         const googleEmail = payload.email;
-        const googleName = payload.given_name || payload.name || googleEmail;
+        let googleName = payload.given_name || payload.name || googleEmail;
         const googleId = payload.sub;
 
         const pool = getPool();
         
-        // 2. Buscar al usuario
+        // 2. Buscar al usuario por correo
         const searchQuery = `
             SELECT id_usuario, usuario, google_id
             FROM "USUARIO" 
@@ -141,27 +153,55 @@ export const googleLogin = async (req, res) => {
         let userName;
 
         if (result.rows.length === 0) {
-            // 3. Si no existe, registrarlo (contrasena NULL)
-            const defaultPasswordHash = null; 
+            // 3. REGISTRO: Si no existe, registrarlo
             
+            let attempts = 0;
+            let finalUserName = googleName;
+            
+            // Lógica para manejar colisión de nombre de usuario (añade _1, _2, etc.)
+            do {
+                const checkUserQuery = `
+                    SELECT id_usuario 
+                    FROM "USUARIO"  
+                    WHERE usuario = $1
+                `;
+                const checkUserResult = await pool.query(checkUserQuery, [finalUserName]);
+
+                if (checkUserResult.rows.length === 0) {
+                    // Nombre de usuario disponible
+                    break;
+                }
+                
+                // Si el nombre ya existe, añade un sufijo
+                attempts++;
+                finalUserName = `${googleName}${attempts > 1 ? `_${attempts}` : '_1'}`; 
+
+            } while (attempts < 5); 
+
+            // Si después de 5 intentos sigue fallando, usa el email como nombre de usuario.
+            if (attempts === 5) {
+                finalUserName = googleEmail.split('@')[0];
+            }
+
+
             const insertQuery = `
-                INSERT INTO "USUARIO" (usuario, correo_electronico, contrasena, google_id) 
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO "USUARIO" (usuario, correo_electronico, google_id) 
+                VALUES ($1, $2, $3)
                 RETURNING id_usuario, usuario
             `;
             
-            let insertResult = await pool.query(insertQuery, [googleName, googleEmail, defaultPasswordHash, googleId]); 
+            let insertResult = await pool.query(insertQuery, [finalUserName, googleEmail, googleId]); 
                 
             userId = insertResult.rows[0].id_usuario; 
             userName = insertResult.rows[0].usuario;
             
         } else {
-            // 4. Si existe, obtener ID y posiblemente actualizar google_id
+            // 4. LOGIN: Si existe, obtener ID y actualizar google_id
             const existingUser = result.rows[0];
             userId = existingUser.id_usuario; 
             userName = existingUser.usuario;
 
-            // Actualizar el google_id si es nulo
+            // Vincula la cuenta existente con Google si aún no tiene google_id
             if (!existingUser.google_id) { 
                 await pool.query(
                     `UPDATE "USUARIO" SET google_id = $1 WHERE id_usuario = $2`,
@@ -170,7 +210,7 @@ export const googleLogin = async (req, res) => {
             }
         }
         
-        // 5. Generar token
+        // 5. Generar token y enviar respuesta de éxito
         return res.status(200).json({
             success: true,
             message: `¡Bienvenido, ${userName}! (Google)`,

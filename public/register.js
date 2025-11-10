@@ -8,11 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorUser = document.getElementById('error-user');
     const errorEmail = document.getElementById('error-email');
     const errorPassword = document.getElementById('error-password');
-
-    // Los siguientes elementos ya no se usarán para errores de campo, 
-    // pero se mantienen para errores de servidor generales si se implementan.
-    // const messageBox = document.getElementById('custom_message_box'); 
-    // const messageText = document.getElementById('custom_message_text'); 
     
     const passwordToggleBtn = document.getElementById('password-toggle-btn');
     const eyeIconOpen = document.getElementById('eye-icon-open');
@@ -143,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json().catch(() => ({}));
 
             if (res.ok && data.success) {
-                // ✅ ÉXITO: Redirige inmediatamente a /index.html sin mensaje.
                 localStorage.setItem('user_token', data.user_token);
                 window.location.href = '/index.html';
             } else {
