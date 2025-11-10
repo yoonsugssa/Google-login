@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-// Railway establece esta variable automáticamente, pero 3000 es el fallback.
+// Render/Railway establece esta variable automáticamente.
 const PORT = process.env.PORT || 3000; 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -45,6 +45,7 @@ const startServer = async () => {
     app.use('/api/auth', authRouter); 
 
     // Rutas de Archivos Estáticos (Frontend)
+    // CRUCIAL: La ruta raíz "/" ahora sirve login.html
     app.get("/", (req, res) => {
         res.sendFile(path.join(publicPath, "login.html"));
     });
@@ -62,7 +63,7 @@ const startServer = async () => {
     });
 
 
-    // --- 3. Arrancar el servidor (CRUCIAL para Railway) ---
+    // --- 3. Arrancar el servidor ---
     app.listen(PORT, () => {
         const status = dbConnected ? '✅ DB Conectada' : '❌ DB Desconectada';
         console.log(`✨ Servidor Express escuchando en el puerto ${PORT}. Estado DB: ${status}`);
