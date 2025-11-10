@@ -117,17 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await res.json().catch(() => ({}));
 
-            if (res.ok && data.success) {
-                localStorage.setItem('user_token', data.user_token);
-                showMessageBox('success', data.message || 'Inicio de sesión exitoso. Redirigiendo...');
-
-                setTimeout(() => { window.location.href = '/index.html'; }, 1000);
-            } else {
-                showMessageBox('error', data.message || 'Error de autenticación con Google.');
+            if (response.ok && data.success) {
+                    localStorage.setItem('user_token', data.user_token);
+                    showMessageBox('success', data.message || '¡Registro exitoso! Redirigiendo...');
+                    setTimeout(() => (window.location.href = '/index.html'), 1000); 
+                } else {
+                    showMessageBox('error', data.message || 'Error en el registro.');
+                }
+            } catch (error) {
+                showMessageBox('error', 'Error de conexión con el servidor.');
             }
-        } catch (error) {
-            showMessageBox('error', 'Error de conexión con el servidor.');
-        }
     }
     window.handleCredentialResponse = handleCredentialResponse;
 });
