@@ -253,3 +253,11 @@ a{
 .abajo{
     color: var(--primary);
 }
+
+.error-text {
+    color: #ef4444; /* Rojo fuerte para indicar error */
+    font-size: 0.85rem;
+    margin: 4px 0 0 4px; /* Pequeño margen superior e izquierdo */
+    display: none; /* Oculto por defecto, visible por JS */
+    line-height: 1.2;
+}

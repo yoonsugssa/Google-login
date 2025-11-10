@@ -7,23 +7,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const closedEye = document.getElementById('eye-icon-closed');
     const loginForm = document.getElementById('login-form');
     const emailInput = document.getElementById('email-input');
-    const messageDiv = document.getElementById('custom_message_text');
-    const messageBox = document.getElementById('custom_message_box');
+    
+    // Elementos de error añadidos en el HTML
+    const errorEmail = document.getElementById('error-email');
+    const errorPassword = document.getElementById('error-password');
 
-    function showMessage(text, color, timeout = 3000) {
-        if (!messageDiv || !messageBox) return;
-        messageDiv.textContent = text;
-        messageBox.style.backgroundColor = color;
-        messageBox.style.display = 'block';
-        messageBox.style.opacity = '1'; // Asegurar visibilidad
-        messageBox.style.visibility = 'visible';
-
-        if (timeout > 0) {
-            setTimeout(() => { 
-                messageBox.style.opacity = '0';
-                messageBox.style.visibility = 'hidden'; 
-            }, timeout);
+    // Función para limpiar todos los errores
+    function clearAllErrors() {
+        if (errorEmail) { errorEmail.textContent = ''; errorEmail.style.display = 'none'; }
+        if (errorPassword) { errorPassword.textContent = ''; errorPassword.style.display = 'none'; }
+        emailInput?.classList.remove('input-error');
+        passwordInput?.classList.remove('input-error');
+    }
+    
+    // Función para mostrar errores de campo
+    function showFieldError(inputElement, errorElement, message) {
+        clearAllErrors(); 
+        
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            inputElement?.classList.add('input-error'); // Asume que 'input-error' está en styles.css
         }
+        inputElement?.focus(); 
+    }
+
+    // Función para errores generales (si el servidor no da información específica)
+    function showGeneralError(message) {
+        // En login, un error general casi siempre se trata como error de credenciales.
+        // Lo mostramos en el campo de email/usuario por defecto.
+        showFieldError(emailInput, errorEmail, message);
     }
 
     if (toggleButton) {
@@ -38,11 +51,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
+            clearAllErrors();
+            
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
-            if (!email || !password) { showMessage('Por favor completa todos los campos.', '#F44336'); return; }
+            
+            // Validaciones de cliente
+            if (!email) { showFieldError(emailInput, errorEmail, 'El usuario o correo es obligatorio.'); return; }
+            if (!password) { showFieldError(passwordInput, errorPassword, 'La contraseña es obligatoria.'); return; }
 
-            showMessage('Iniciando sesión...', '#2196F3', 0); 
+            // Omitir mensajes de "Cargando"
 
             try {
                 const response = await fetch(`${AUTH_BASE_URL}/login`, {
@@ -54,27 +72,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json().catch(() => ({}));
 
                 if (response.ok) {
-                    // 2. CORRECCIÓN: Usamos timeout=0 para que el mensaje no desaparezca antes de redirigir.
-                    showMessage(data.message || 'Redirigiendo...', '#4CAF50', 0); 
+                    // ✅ ÉXITO: Redirección INMEDIATA sin mensajes
                     if (data.user_token) localStorage.setItem('user_token', data.user_token);
-                    
-                    // La redirección ocurre después de 1 segundo.
-                    setTimeout(() => (window.location.href = '/index.html'), 1000); 
+                    window.location.href = '/index.html'; 
                 } else {
-                    // Error: Muestra el mensaje por 3 segundos (timeout por defecto)
-                    showMessage(`Error: ${data.message || 'Error de credenciales.'}`, '#F44336');
+                    // ERROR DEL SERVIDOR
+                    const message = data.message || 'Credenciales incorrectas.';
+                    
+                    // Asume que un error de login es un problema de credenciales (email o password)
+                    if (message.toLowerCase().includes('password') || message.toLowerCase().includes('contraseña')) {
+                        showFieldError(passwordInput, errorPassword, message);
+                    } else {
+                        // Por defecto, muestra el error en el campo de email/usuario
+                        showFieldError(emailInput, errorEmail, message);
+                    }
                 }
             } catch (error) {
-                showMessage('Error de conexión con el servidor. Intente de nuevo.', '#F44336');
+                showGeneralError('Error de conexión con el servidor. Intente de nuevo.');
             }
         });
     }
 
     window.handleCredentialResponse = async (response) => {
+        clearAllErrors();
         const id_token = response?.credential;
-        if (!id_token) { showMessage('Error al obtener credencial de Google.', '#F44336'); return; }
+        if (!id_token) { showGeneralError('Error al obtener credencial de Google.'); return; }
 
-        showMessage('Procesando con Google...', '#2196F3', 0);
+        // Omitir mensajes de "Cargando"
 
         try {
             const apiResponse = await fetch(`${AUTH_BASE_URL}/google-login`, {
@@ -86,14 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await apiResponse.json().catch(() => ({}));
 
             if (apiResponse.ok && data.success) {
-                showMessage(`Google Login exitoso. ${data.message || 'Redirigiendo...'}`, '#4CAF50', 0); // timeout=0
+                // ✅ ÉXITO: Redirección INMEDIATA sin mensajes
                 if (data.user_token) localStorage.setItem('user_token', data.user_token);
-                setTimeout(() => (window.location.href = '/index.html'), 1000);
+                window.location.href = '/index.html';
             } else {
-                showMessage(`Error de Google Login: ${data.message || 'Error del servidor.'}`, '#F44336');
+                // Error de Google Login (error general)
+                showGeneralError(data.message || 'Error de autenticación con Google.');
             }
         } catch (error) {
-            showMessage('Error de conexión con el servidor.', '#F44336');
+            showGeneralError('Error de conexión con el servidor.');
         }
     };
 });
