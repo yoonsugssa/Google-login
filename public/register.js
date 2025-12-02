@@ -2,7 +2,6 @@ const AUTH_BASE_URL = '/api/auth';
 const googleLoginUrl = `${AUTH_BASE_URL}/google-login`;
 const registerUrl = `${AUTH_BASE_URL}/register`;
 
-// Variables que se inicializan en DOMContentLoaded, pero deben ser globales para las funciones de error
 const userInput = document.getElementById('user-input');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
@@ -11,12 +10,6 @@ const errorUser = document.getElementById('error-user');
 const errorEmail = document.getElementById('error-email');
 const errorPassword = document.getElementById('error-password');
 
-
-// =========================================================
-// 1. FUNCIONES DE UTILIDAD (Fuera de DOMContentLoaded)
-// =========================================================
-
-// Función auxiliar para limpiar todos los errores
 function clearAllErrors() {
     if (errorUser) { errorUser.textContent = ''; errorUser.style.display = 'none'; }
     if (errorEmail) { errorEmail.textContent = ''; errorEmail.style.display = 'none'; }
@@ -27,7 +20,6 @@ function clearAllErrors() {
     passwordInput?.classList.remove('input-error');
 }
 
-// FUNCIÓN PARA MOSTRAR ERRORES DE CAMPO
 function showFieldError(inputElement, errorElement, message) {
     clearAllErrors(); 
     
@@ -43,10 +35,6 @@ function showGeneralError(message) {
     console.error("ERROR GENERAL:", message);
 }
 
-
-// =========================================================
-// 2. FUNCIÓN GLOBAL PARA GOOGLE SIGN-IN (ACCESIBLE PARA GSI)
-// =========================================================
 window.handleCredentialResponse = async (response) => {
     clearAllErrors();
     const id_token = response?.credential;
@@ -62,7 +50,6 @@ window.handleCredentialResponse = async (response) => {
         const data = await res.json().catch(() => ({}));
 
         if (res.ok && data.success) {
-            // ✅ ÉXITO: Redirección INMEDIATA
             localStorage.setItem('user_token', data.user_token);
             window.location.href = '/index.html';
         } else {
@@ -73,9 +60,6 @@ window.handleCredentialResponse = async (response) => {
     }
 }
 
-// =========================================================
-// 3. CÓDIGO QUE ESPERA LA CARGA DEL DOM (Event Listeners)
-// =========================================================
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('register-form');
     const passwordToggleBtn = document.getElementById('password-toggle-btn');
@@ -100,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = emailInput?.value.trim();
             const password = passwordInput?.value.trim();
 
-            // 1. Validaciones de cliente
             if (!usuario) { showFieldError(userInput, errorUser, 'Por favor ingresa un nombre de usuario.'); return; }
             if (!email) { showFieldError(emailInput, errorEmail, 'Por favor ingresa tu correo electrónico.'); return; }
             if (!password) { showFieldError(passwordInput, errorPassword, 'Por favor ingresa una contraseña.'); return; }
@@ -116,11 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json().catch(() => ({}));
 
                 if (response.ok && data.success) {
-                    // ✅ ÉXITO: Redirige inmediatamente
                     localStorage.setItem('user_token', data.user_token);
                     window.location.href = '/index.html'; 
                 } else {
-                    // 2. ERROR DEL SERVIDOR
                     const message = data.message || 'Error desconocido en el registro.';
                     
                     if (message.toLowerCase().includes('usuario')) {

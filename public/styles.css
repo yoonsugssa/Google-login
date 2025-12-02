@@ -1,11 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@449&family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap');    
 @import url('https://fonts.googleapis.com/css2?family=Caprasimo&family=Caveat:wght@449&family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Reenie+Beanie&family=Special+Elite&family=Sue+Ellen+Francisco&display=swap');
 
-/* --- NUEVA REGLA: html ----------------------------------- */
 html {
     height: 100%;
 }
-/* -------------------------------------------------------- */
 
 body {
     height: 100%; 
@@ -20,13 +18,13 @@ body {
 }
 
 .modern-form {
-    --primary: #9c3bf6;
-    --primary-dark: #7d1c86;
-    --primary-light: rgba(162, 59, 246, 0.1);
-    --success: #00885b;
-    --text-main: #2f1e3b;
-    --text-secondary: #79648b;
-    --bg-input: #faf8fc;
+    --primary: #59a5d1;              /* Azul Cielo, de la barra superior de la web hotelera */
+    --primary-dark: #2e4359;         /* Azul Marino/Gris, de la barra de navegación o texto oscuro */
+    --primary-light: #e6f0f5;        /* Azul muy claro/casi blanco, del fondo del cielo */
+    --success: #00885b;              /* Mantengo tu color verde de éxito. El verde del agua es muy específico. */
+    --text-main: #2f1e3b;            /* Mantengo tu color, funciona bien con el contraste. */
+    --text-secondary: #79648b;       /* Mantengo tu color, funciona bien con el contraste suave. */
+    --bg-input: #faf8fc;             /* Mantengo tu color, ideal para fondos de campo de entrada. */
 
     position: relative;
     /* Los estilos responsive del formulario se mantienen */

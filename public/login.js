@@ -60,11 +60,9 @@ window.handleCredentialResponse = async (response) => {
         const data = await apiResponse.json().catch(() => ({}));
 
         if (apiResponse.ok && data.success) {
-            // ✅ ÉXITO: Redirección INMEDIATA
             if (data.user_token) localStorage.setItem('user_token', data.user_token);
             window.location.href = '/index.html';
         } else {
-            // Error de Google Login
             showGeneralError(data.message || 'Error de autenticación con Google.');
         }
     } catch (error) {
@@ -72,9 +70,6 @@ window.handleCredentialResponse = async (response) => {
     }
 };
 
-// =========================================================
-// CÓDIGO QUE ESPERA LA CARGA DEL DOM (Login Manual)
-// =========================================================
 document.addEventListener('DOMContentLoaded', () => {
 
     if (toggleButton) {
@@ -98,8 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!email) { showFieldError(emailInput, errorEmail, 'El usuario o correo es obligatorio.'); return; }
             if (!password) { showFieldError(passwordInput, errorPassword, 'La contraseña es obligatoria.'); return; }
 
-            // Se elimina showMessage('Iniciando sesión...', '#2196F3', 0);
-
             try {
                 const response = await fetch(`${AUTH_BASE_URL}/login`, {
                     method: 'POST',
@@ -110,14 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json().catch(() => ({}));
 
                 if (response.ok) {
-                    // ✅ ÉXITO: Permite entrar y redirige inmediatamente
                     if (data.user_token) localStorage.setItem('user_token', data.user_token);
                     window.location.href = '/index.html'; 
                 } else {
-                    // ERROR DEL SERVIDOR
                     const message = data.message || 'Credenciales incorrectas.';
                     
-                    // Intenta asignar el error al campo más probable
                     if (message.toLowerCase().includes('password') || message.toLowerCase().includes('contraseña')) {
                         showFieldError(passwordInput, errorPassword, message);
                     } else {
