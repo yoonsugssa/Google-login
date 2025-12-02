@@ -24,7 +24,7 @@ body {
     --success: #00885b;              /* Mantengo tu color verde de éxito. El verde del agua es muy específico. */
     --text-main: #2f1e3b;            /* Mantengo tu color, funciona bien con el contraste. */
     --text-secondary: #79648b;       /* Mantengo tu color, funciona bien con el contraste suave. */
-    --bg-input: #faf8fc;             /* Mantengo tu color, ideal para fondos de campo de entrada. */
+    --bg-input: #f8fbfc;             /* Mantengo tu color, ideal para fondos de campo de entrada. */
 
     position: relative;
     /* Los estilos responsive del formulario se mantienen */
