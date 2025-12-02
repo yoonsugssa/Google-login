@@ -38,10 +38,6 @@ function showGeneralError(message) {
 }
 
 
-// =========================================================
-// 🚨 FUNCIÓN GLOBAL PARA GOOGLE SIGN-IN (GSI) 🚨
-// Debe estar global para que el script de Google la encuentre.
-// =========================================================
 window.handleCredentialResponse = async (response) => {
     clearAllErrors();
     const id_token = response?.credential;

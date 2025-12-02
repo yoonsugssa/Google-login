@@ -18,11 +18,11 @@ body {
 }
 
 .modern-form {
-    --primary: #59a5d1;              /* Azul Cielo, de la barra superior de la web hotelera */
+    --primary: #265073;              /* Azul Cielo, de la barra superior de la web hotelera */
     --primary-dark: #2e4359;         /* Azul Marino/Gris, de la barra de navegación o texto oscuro */
     --primary-light: #e6f0f5;        /* Azul muy claro/casi blanco, del fondo del cielo */
     --success: #00885b;              /* Mantengo tu color verde de éxito. El verde del agua es muy específico. */
-    --text-main: #211e3b;            /* Mantengo tu color, funciona bien con el contraste. */
+    --text-main: #191E3B;            /* Mantengo tu color, funciona bien con el contraste. */
     --text-secondary: #64678b;       /* Mantengo tu color, funciona bien con el contraste suave. */
     --bg-input: #f8fbfc;             /* Mantengo tu color, ideal para fondos de campo de entrada. */
 
