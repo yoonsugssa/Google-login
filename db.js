@@ -8,7 +8,7 @@ let pool;
 
 /**
  * Conecta e inicializa el pool de PostgreSQL.
- * @returns {Pool} El pool de conexión.
+ * @returns {Pool} 
  */
 export const connectDB = async () => {
     try {
@@ -28,7 +28,6 @@ export const connectDB = async () => {
                 }
             }); 
             
-            // Prueba de conexión
             await pool.query('SELECT NOW()'); 
             console.log('✅ Conexión exitosa a PostgreSQL.');
         }

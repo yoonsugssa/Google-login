@@ -21,9 +21,6 @@ const generateToken = (id) => {
     });
 };
 
-// ===============================================
-// 1. REGISTRO MANUAL
-// =================================================
 export const registerUser = async (req, res) => {
     const { usuario, email, password } = req.body;
     if (!usuario || !email || !password) {
@@ -66,9 +63,6 @@ export const registerUser = async (req, res) => {
     }
 };
 
-// ===============================================
-// 2. LOGIN MANUAL
-// =================================================
 export const loginUser = async (req, res) => {
     const { usuarioOrEmail, password } = req.body;
     if (!usuarioOrEmail || !password) {
@@ -78,7 +72,6 @@ export const loginUser = async (req, res) => {
     try {
         const pool = getPool();
 
-        // Se selecciona la contraseña (contrasena) y google_id
         const query = `
             SELECT id_usuario, usuario, contrasena, google_id
             FROM "USUARIO" 
@@ -88,17 +81,14 @@ export const loginUser = async (req, res) => {
         const result = await pool.query(query, [usuarioOrEmail]);
         const user = result.rows[0];
         
-        // 🚨 Manejo de usuario encontrado
         if (!user) {
             return res.status(401).json({ success: false, message: "Credenciales inválidas." });
         }
 
-        // 🚨 Si el usuario existe pero no tiene contraseña (solo Google)
         if (!user.contrasena && user.google_id) {
              return res.status(401).json({ success: false, message: "Cuenta registrada solo con Google. Utiliza el inicio de sesión de Google." });
         }
         
-        // Compara el hash (solo si existe)
         const isPasswordMatch = user.contrasena 
             ? (await bcrypt.compare(password, user.contrasena)) 
             : false;
@@ -118,9 +108,6 @@ export const loginUser = async (req, res) => {
     }
 };
 
-// ===============================================
-// 3. GOOGLE LOGIN CORREGIDO
-// ===============================================
 export const googleLogin = async (req, res) => {
     const { id_token } = req.body;
     
@@ -129,7 +116,6 @@ export const googleLogin = async (req, res) => {
     }
 
     try {
-        // 1. Verificar el token con Google
         const ticket = await googleClient.verifyIdToken({
             idToken: id_token,
             audience: GOOGLE_CLIENT_ID,
@@ -141,7 +127,6 @@ export const googleLogin = async (req, res) => {
 
         const pool = getPool();
         
-        // 2. Buscar al usuario por correo
         const searchQuery = `
             SELECT id_usuario, usuario, google_id
             FROM "USUARIO" 
@@ -153,12 +138,10 @@ export const googleLogin = async (req, res) => {
         let userName;
 
         if (result.rows.length === 0) {
-            // 3. REGISTRO: Si no existe, registrarlo
             
             let attempts = 0;
             let finalUserName = googleName;
             
-            // Lógica para manejar colisión de nombre de usuario (añade _1, _2, etc.)
             do {
                 const checkUserQuery = `
                     SELECT id_usuario 
@@ -168,11 +151,9 @@ export const googleLogin = async (req, res) => {
                 const checkUserResult = await pool.query(checkUserQuery, [finalUserName]);
 
                 if (checkUserResult.rows.length === 0) {
-                    // Nombre de usuario disponible
                     break;
                 }
                 
-                // Si el nombre ya existe, añade un sufijo
                 attempts++;
                 finalUserName = `${googleName}${attempts > 1 ? `_${attempts}` : '_1'}`; 
 
@@ -194,12 +175,10 @@ export const googleLogin = async (req, res) => {
             userName = insertResult.rows[0].usuario;
             
         } else {
-            // 4. LOGIN: Si existe, obtener ID y actualizar google_id
             const existingUser = result.rows[0];
             userId = existingUser.id_usuario; 
             userName = existingUser.usuario;
 
-            // Vincula la cuenta existente con Google si aún no tiene google_id
             if (!existingUser.google_id) { 
                 await pool.query(
                     `UPDATE "USUARIO" SET google_id = $1 WHERE id_usuario = $2`,
@@ -208,7 +187,6 @@ export const googleLogin = async (req, res) => {
             }
         }
         
-        // 5. Generar token y enviar respuesta de éxito
         return res.status(200).json({
             success: true,
             message: `¡Bienvenido, ${userName}! (Google)`,

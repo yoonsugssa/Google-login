@@ -1,4 +1,3 @@
-// authRoutes.js
 import { registerUser, loginUser, googleLogin } from './authController.js';
 import express from 'express';
 
