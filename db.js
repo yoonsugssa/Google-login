@@ -23,7 +23,6 @@ export const connectDB = async () => {
                 connectionString: connectionString,
                 max: 10,
                 idleTimeoutMillis: 30000,
-                // Configuración SSL es a menudo necesaria en entornos cloud como Railway
                 ssl: {
                     rejectUnauthorized: false 
                 }

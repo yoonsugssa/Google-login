@@ -177,8 +177,6 @@ export const googleLogin = async (req, res) => {
                 finalUserName = `${googleName}${attempts > 1 ? `_${attempts}` : '_1'}`; 
 
             } while (attempts < 5); 
-
-            // Si después de 5 intentos sigue fallando, usa el email como nombre de usuario.
             if (attempts === 5) {
                 finalUserName = googleEmail.split('@')[0];
             }
