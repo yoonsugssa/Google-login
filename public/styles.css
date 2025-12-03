@@ -2,12 +2,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Caprasimo&family=Caveat:wght@449&family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Reenie+Beanie&family=Special+Elite&family=Sue+Ellen+Francisco&display=swap');
 
 html {
-    height: 90%;
+    height: 100%;
 }
 
 body {
-    height: 90%; 
-    min-height: 90%; 
+    height: 100%; 
+    min-height: 100%; 
     overflow: hidden; 
     display: flex;
     justify-content: center;
@@ -27,7 +27,6 @@ body {
     --bg-input: #f8fbfc;             /* Mantengo tu color, ideal para fondos de campo de entrada. */
 
     position: relative;
-    /* Los estilos responsive del formulario se mantienen */
     width: 90%; 
     max-width: 350px; 
     padding: 24px;
@@ -39,7 +38,6 @@ body {
         inset 0 0 0 1px rgba(148, 163, 184, 0.1);
 }
 
-/* El resto del código CSS permanece igual... */
 
 .form-title {
     font-size: 25px;
